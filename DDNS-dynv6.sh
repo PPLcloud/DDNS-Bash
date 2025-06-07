@@ -6,7 +6,9 @@ LOG_FILE="/tmp/last_dns_update.log"
 ipv4_addr=$(curl -4 -s ip.sb)
 ipv6_addr=$(curl -6 -s ip.sb)
 
-# Telegram Bot 配置（你需要设置以下变量）
+DYNV6_TOKEN=""  # 输入您的dynv6 token
+
+# Telegram Bot 配置（可选）
 TELEGRAM_BOT_TOKEN=""
 TELEGRAM_CHAT_ID=""
 
@@ -19,6 +21,32 @@ send_telegram() {
     curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
         -d chat_id="${TELEGRAM_CHAT_ID}" \
         -d text="$message" > /dev/null
+}
+
+check_ip_env() {
+    local timeout=1
+
+    # 检测 IPv4
+    if curl -4 --max-time $timeout -s ip.sb >/dev/null 2>&1 \
+       || curl -4 --max-time $timeout -s ifconfig.me >/dev/null 2>&1; then
+        HAS_IPV4=1
+        ipv4_addr=$(curl -4 -s ip.sb)
+    else
+        HAS_IPV4=0
+        ipv4_addr=""
+    fi
+
+    # 检测 IPv6
+    if curl -6 --max-time $timeout -s ip.sb >/dev/null 2>&1 \
+       || curl -6 --max-time $timeout -s ifconfig.me >/dev/null 2>&1; then
+        HAS_IPV6=1
+        ipv6_addr=$(curl -6 -s ip.sb)
+    else
+        HAS_IPV6=0
+        ipv6_addr=""
+    fi
+
+    echo "检测结果：HAS_IPV4=$HAS_IPV4，HAS_IPV6=$HAS_IPV6"
 }
 
 check_crontab() {
@@ -51,7 +79,6 @@ update_dns() {
     local record_type=$1
     local ip_addr=$2
     local hostname=$3
-    local token=""  # 🔁请输入真实 token
 
     if [ -n "$ip_addr" ]; then
         local last_update=$(grep "$hostname $record_type" "$LOG_FILE" | tail -n 1 | awk '{print $6}')
@@ -66,7 +93,7 @@ update_dns() {
             if [ "$query_ip" = "$ip_addr" ]; then
                 echo "$(date '+%Y-%m-%d %H:%M:%S') - $hostname $record_type $ip_addr" >> "$LOG_FILE"
             else
-                local url="https://${record_type}.dynv6.com/api/update?hostname=${hostname}&${record_type}=${ip_addr}&token=${token}"
+                local url="https://${record_type}.dynv6.com/api/update?hostname=${hostname}&${record_type}=${ip_addr}&token=${DYNV6_TOKEN}"
                 local response=$(curl -s "$url")
 
                 echo "$(date '+%Y-%m-%d %H:%M:%S') - Updated $record_type for $hostname to $ip_addr" >> "$LOG_FILE"
@@ -84,7 +111,10 @@ update_dns() {
 # 创建日志文件（如不存在）
 [ -f "$LOG_FILE" ] || touch "$LOG_FILE"
 
-# 自动检测并更新
-[ -n "$ipv4_addr" ] && update_dns "ipv4" "$ipv4_addr" "xxx.dns.army"
-[ -n "$ipv6_addr" ] && update_dns "ipv6" "$ipv6_addr" "xxx.v6.army"
+# 调用检测函数
+check_ip_env
+
+# 根据检测结果更新 DNS
+[ "$HAS_IPV4" = "1" ] && [ -n "$ipv4_addr" ] && update_dns "ipv4" "$ipv4_addr" "xxx.dns.army"
+[ "$HAS_IPV6" = "1" ] && [ -n "$ipv6_addr" ] && update_dns "ipv6" "$ipv6_addr" "xxx.v6.army"
 
