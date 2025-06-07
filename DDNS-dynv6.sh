@@ -2,11 +2,8 @@
 
 LOG_FILE="/tmp/last_dns_update.log"
 
-# 获取公网 IPv4 / IPv6（分别测试是否可获取）
-ipv4_addr=$(curl -4 -s ip.sb)
-ipv6_addr=$(curl -6 -s ip.sb)
-
 DYNV6_TOKEN=""  # 输入您的dynv6 token
+DYNV6_HOSTNAME=""  # 输入您的dynv6主机名
 
 # Telegram Bot 配置（可选）
 TELEGRAM_BOT_TOKEN=""
@@ -115,6 +112,6 @@ update_dns() {
 check_ip_env
 
 # 根据检测结果更新 DNS
-[ "$HAS_IPV4" = "1" ] && [ -n "$ipv4_addr" ] && update_dns "ipv4" "$ipv4_addr" "xxx.dns.army"
-[ "$HAS_IPV6" = "1" ] && [ -n "$ipv6_addr" ] && update_dns "ipv6" "$ipv6_addr" "xxx.v6.army"
+[ "$HAS_IPV4" = "1" ] && [ -n "$ipv4_addr" ] && update_dns "ipv4" "$ipv4_addr" "$DYNV6_HOSTNAME"
+[ "$HAS_IPV6" = "1" ] && [ -n "$ipv6_addr" ] && update_dns "ipv6" "$ipv6_addr" "$DYNV6_HOSTNAME"
 
