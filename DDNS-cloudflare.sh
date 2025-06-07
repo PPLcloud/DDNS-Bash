@@ -206,11 +206,21 @@ update_dns_record() {
     echo "$response"
 }
 
-# 检查 crontab 中是否已存在本脚本
 check_crontab() {
+    # 检查用户是否输入过no
+    if crontab -l 2>/dev/null | grep -q "CRONTAB_MANAGED_BY_MY_SCRIPT"; then
+        return
+    fi
+
     if ! crontab -l 2>/dev/null | grep -q "$SCRIPT_PATH"; then
         log_and_notify "INFO" "检测到 crontab 中没有本脚本的定时任务。"
-        read -p "请输入希望几分钟运行一次本脚本 (1-60): " interval
+        read -p "请输入希望几分钟运行一次本脚本 (1-60)，或输入 'no' 表示不再提示: " interval
+
+        if [[ "$interval" == "no" ]]; then
+            (crontab -l 2>/dev/null; echo "# CRONTAB_MANAGED_BY_MY_SCRIPT") | crontab -
+            log_and_notify "INFO" "用户选择跳过 crontab 设置提示，今后将不再提示。"
+            return
+        fi
 
         if ! [[ "$interval" =~ ^[0-9]+$ ]] || [[ "$interval" -lt 1 ]] || [[ "$interval" -gt 60 ]]; then
             log_and_notify "ERROR" "用户输入的定时任务间隔无效：$interval"
@@ -219,8 +229,6 @@ check_crontab() {
 
         (crontab -l 2>/dev/null; echo "*/$interval * * * * $SCRIPT_PATH >> $LOG_FILE 2>&1") | crontab -
         log_and_notify "INFO" "已添加 crontab 定时任务，每 $interval 分钟运行一次本脚本。"
-    #else
-        #log_and_notify "INFO" "crontab 中已存在本脚本的定时任务。"
     fi
 }
 
