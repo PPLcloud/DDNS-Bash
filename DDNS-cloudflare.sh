@@ -140,7 +140,7 @@ check_ip_env() {
         HAS_IPV6=0
     fi
 
-    log_and_notify "INFO" "检测结果：HAS_IPV4=$HAS_IPV4，HAS_IPV6=$HAS_IPV6"
+    #log_and_notify "INFO" "检测结果：HAS_IPV4=$HAS_IPV4，HAS_IPV6=$HAS_IPV6"
 }
 
 # -------------------------------
@@ -275,8 +275,8 @@ main() {
                         error_msg=$(echo "$update_result" | jq -r '.errors[0].message // "未知错误"')
                         log_and_notify "ERROR" "A 记录更新失败: ${error_msg}"
                     fi
-                else
-                    log_and_notify "INFO" "IPv4 地址未变化: $ipv4"
+                #else
+                    #log_and_notify "INFO" "IPv4 地址未变化: $ipv4"
                 fi
             else
                 log_and_notify "ERROR" "未找到 A 记录: $HOST_NAME"
@@ -309,8 +309,8 @@ main() {
                         error_msg=$(echo "$update_result" | jq -r '.errors[0].message // "未知错误"')
                         log_and_notify "ERROR" "AAAA 记录更新失败: ${error_msg}"
                     fi
-                else
-                    log_and_notify "INFO" "IPv6 地址未变化: $ipv6"
+                #else
+                    #log_and_notify "INFO" "IPv6 地址未变化: $ipv6"
                 fi
             else
                 log_and_notify "ERROR" "未找到 AAAA 记录: $HOST_NAME"
@@ -318,8 +318,8 @@ main() {
         else
             log_and_notify "ERROR" "无法获取当前 IPv6 地址"
         fi
-    else
-        log_and_notify "INFO" "IPv6 环境不可用，跳过 AAAA 记录更新"
+    #else
+        #log_and_notify "INFO" "IPv6 环境不可用，跳过 AAAA 记录更新"
     fi
 
     # 检查是否是root运行，如果是，则确保 crontab 定时任务
