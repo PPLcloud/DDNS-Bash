@@ -14,10 +14,10 @@ send_telegram() {
         return
     fi
 
-    local message=$1
-    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-        -d chat_id="${TELEGRAM_CHAT_ID}" \
-        -d text="$message" > /dev/null
+    local text="$1"
+    # 使用 curl 调用 Telegram Bot API
+    encoded_message=$(echo -e "$text" | jq -s -R -r @uri)
+    curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encoded_message}" >/dev/null
 }
 
 check_ip_env() {

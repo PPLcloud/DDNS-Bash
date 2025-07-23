@@ -46,9 +46,8 @@ log_and_notify() {
 send_telegram() {
     local text="$1"
     # 使用 curl 调用 Telegram Bot API
-    curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-        -d chat_id="${CHAT_ID}" \
-        -d text="$text" >/dev/null 2>&1
+    encoded_message=$(echo -e "$text" | jq -s -R -r @uri)
+    curl -s "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encoded_message}" >/dev/null
 }
 
 # 检查并安装必要软件：curl、jq
