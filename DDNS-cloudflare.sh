@@ -31,7 +31,7 @@ log_and_notify() {
     # 将日志写入文件
     echo "$timestamp [$level] $message" >> "$LOG_FILE"
 
-    if [[ "$BOT_TOKEN" != "" && "$CHAT_ID" != "" ]]; then
+    if [[ "$BOT_TOKEN" == "" || "$CHAT_ID" == "" ]]; then
         return
     fi
 
